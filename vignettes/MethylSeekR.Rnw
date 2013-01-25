@@ -1,0 +1,513 @@
+\documentclass[a4paper]{article} 
+\usepackage{a4wide}
+\setlength{\parskip}{0.7ex plus0.1ex minus0.1ex}
+\setlength{\parindent}{0em}
+\usepackage{times}
+\usepackage{hyperref}
+
+
+\usepackage{Sweave}
+\DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}{xleftmargin=2em}
+\DefineVerbatimEnvironment{Scode}{Verbatim}{xleftmargin=2em}
+\fvset{listparameters={\setlength{\topsep}{0pt}}}
+\renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
+
+
+
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textit{#1}}}
+\newcommand{\Rmethod}[1]{{\texttt{#1}}}
+\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+
+\newcommand{\software}[1]{\textsf{#1}}
+\newcommand{\R}{\software{R}}
+
+
+\usepackage{rotating}
+\title{MethylSeekR}
+\author{Lukas Burger, Dimos Gaidatzis, Dirk Sch\"ubeler and Michael Stadler}
+\date{Modified: January 22, 2013. Compiled: \today}
+
+\begin{document}
+
+\SweaveOpts{engine=R} 
+%\VignetteIndexEntry{MethylSeekR} 
+%\VignetteDepends{MethylSeekR, BSgenome.Hsapiens.UCSC.hg18, rtracklayer} 
+%\VignetteKeywords{MethylSeekR, segmentPMDs, segmentUMRsLMRs} 
+%\VignettePackage{MethylSeekR} 
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+
+\section{Introduction}
+
+This vignette describes how to use \textit{MethylSeekR}  to find regulatory
+regions from whole-genome bisulfite-sequencing (Bis-seq) methylation
+data. The basic ideas of the method were introduced in \cite{Stadler:2011vn}
+and the validity of the approach demonstrated on Bis-seq data from mouse
+embryonic stem cells and neural progenitors. MethylSeekR represents a refined
+and extended version of the inital approach that makes it more robust and
+generally applicable and allows much simpler and interactive setting of
+segmentation parameters. For details regarding the methodology, we refer the
+reader to \cite{Burger2012}.
+
+\section{Prerequisites}
+
+Several functions of \textit{MethylSeekR} require the genome sequence or derived
+information such as the chromsome lengths of the reference genome used. To
+retrieve this information, \textit{MethylSeekR} makes use of the \textit{BSgenome} package
+and the related genome data packages. \textit{BSgenome} can be installed from
+Bioconductor (\url{http://www.bioconductor.org}) using the following commands
+
+<<install, eval=FALSE>>=
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("BSgenome")
+@
+
+After the installation, the available genomes can be displayed with 
+
+<<genomes, eval=FALSE>>=
+library(BSgenome)
+available.genomes()
+@
+
+For the example data that comes along with the package, we need the hg18
+assembly of the human genome \textit{BSgenome.Hsapiens.UCSC.hg18}. This
+genome, and analogously any of the other genomes, can be installed as follows
+
+<<install, eval=FALSE>>=
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("BSgenome.Hsapiens.UCSC.hg18")
+@
+
+
+\section{Data import and SNP filtering}
+
+We start by loading the \textit{MethylSeekR} package
+
+<<eval=TRUE, results=hide>>=
+library(MethylSeekR)
+@
+
+One step of the \textit{MethylSeekR} workflow depends on random permutations
+of the data (see below), which may lead to slightly different results each
+time the calculations are performed. It is thus recommended to set the random
+number generator seed at the beginning of the analysis to ensure exact
+reproducibility of the results. In R, this can be done e.g. as follows
+
+<<eval=TRUE, results=hide>>=
+set.seed(123)
+@
+
+In a first step, the Bis-seq data needs to be loaded into
+R. The data should be in a tab-delimited file with four columns,
+\textit{chromosome}, \textit{position}, \textit{T} and \textit{M}, where
+\textit{position} is the coordinate of the cytosine in the CpG on the plus
+strand (we assume that the counts have been pooled from the two strands),
+\textit{T} is the total number of reads overlapping the cytosine and
+\textit{M} the total number of reads without cytosine to thymine conversion
+(reflecting methylated cytosines). An example file, containing the
+methylation information for $200,000$ CpGs from chromosome 22 of human IMR90
+cells \cite{Lister:2009fk}, is part of the package and its path can be
+retrieved with the following command
+
+<<eval=FALSE>>=
+system.file("extdata", "Lister2009_imr90_hg18_chr22.tab",
+package="MethylSeekR")
+@
+
+The data can be loaded into R using the \texttt{readMethylome} function.
+This function takes two arguments, the name of the file containing the
+methylation data and a named vector containing the chromosome lengths of the
+reference genome. This vector can be easily created using the
+\textit{BSgenome} package of the reference genome. For the example data used
+here, we work with the human hg18 assembly.
+
+<<eval=TRUE>>=
+library("BSgenome.Hsapiens.UCSC.hg18")
+sLengths=seqlengths(Hsapiens)
+head(sLengths)
+@ 
+
+\texttt{readMethylome} will directly create a GRanges object containing the
+methylation data. GRanges objects (as defined in the \textit{GenomicRanges}
+package) represent general purpose containers for storing genomic intervals
+and allow for very efficient overlap/intersection operations. To use
+\textit{MethylSeekR}, it is not necessary to understand how GRanges objects
+work, and we refer the interested reader to
+\texttt{help(package="GenomicRanges")}.
+
+
+
+To read in the methylation data of our example data, we can use the following
+commands.
+
+<<eval=TRUE>>=
+methFname <- system.file("extdata", 
+"Lister2009_imr90_hg18_chr22.tab", package="MethylSeekR")
+meth.gr <- readMethylome(FileName=methFname, seqLengths=sLengths)
+head(meth.gr)
+@ 
+
+
+Each element of the \texttt{meth.gr} object stands for one CpG and the
+corresponding metadata (columns on the right) contains its counts $T$ and
+$M$.
+
+
+In cases where the genomic background of the sample differs from the
+reference genome which the methylation data has been aligned against, CpGs
+overlapping SNPs should be removed from the methylation table
+\cite{Stadler:2011vn, Burger2012}. To this end, \texttt{MethylSeekR} provides
+functions to both load a SNP table and remove the SNP-overlapping CpGs from
+the methylation GRanges object (the following four code chunks can be
+skipped if the genomic background of the sample is identical to the reference
+genome).
+
+
+Similary to the methylation data, the SNP table can be loaded using the
+\texttt{readSNPTable} function. The SNP data should be in a tab-delimited
+text file with two columns corresponding to the chromosome and position of
+the SNPs. The path to an example SNP file with data downloaded from dbSNP
+\cite{Sherry:2001fk} for hg18 (and prefiltered to keep the file size small)
+can be retrieved as follows
+
+<<eval=FALSE>>=
+system.file("extdata", "SNVs_hg18_chr22.tab",
+package="MethylSeekR")
+@ 
+
+To read in the SNPs from our example file, we can thus use the following
+commands
+
+
+<<eval=TRUE>>=
+snpFname <- system.file("extdata", "SNVs_hg18_chr22.tab",
+package="MethylSeekR")
+snps.gr <- readSNPTable(FileName=snpFname, seqLengths=sLengths)
+head(snps.gr)
+@
+
+Here, \texttt{seqLengths} is the same named vector with chromsome lengths as
+needed for the \texttt{readMethylome} function. \texttt{readSNPTable}
+directly returns a GRanges object containing the coordinates of the
+SNPs. Using this object, the CpGs overlapping SNPs can now be removed from
+the methylation object using the \texttt{removeSNPs} function.
+
+
+<<>>=
+meth.gr <- removeSNPs(meth.gr, snps.gr)
+@
+
+
+\section{Segmentation of partially methylated domains}
+
+
+Some methylomes contain large regions of seemingly disordered methylation
+which have been termed partially methylated domains (PMDs,
+\cite{Lister:2009fk}). These regions need to be identified and masked prior
+to the segmentation of regulatory regions. To decide whether a methylome
+contains PMDs, we can first calculate the distribution of $\alpha$-values for
+one selected chromosome. $\alpha$ characterizes the distribution of
+methylation levels in sliding windows containing 100 consecutive CpGs along
+the genome. $\alpha$-values smaller than 1 reflect a polarized distribution,
+favoring low and high methylation (as in regulatory regions and background
+methylation levels respectively), whereas $\alpha$-values equal to 1 or
+larger indicate distributions that are rather uniform or polarized towards
+intermediate methylation levels (as in PMDs). The distribution of
+$\alpha$-values for one selected chromosome can be determined as follows,
+
+
+
+<<fig=TRUE, width=5, height=5>>=
+plotAlphaDistributionOneChr(m=meth.gr, chr.sel="chr22", 
+num.cores=1)
+@
+
+\texttt{chr.sel} denotes the chromosome for which the statistic is
+calculated. Generally, the $\alpha$ distribution of different chromosomes are
+very similar, but we recommend using a small autosome to minimize the
+computing time and to avoid sex-specific
+biases. \texttt{plotAlphaDistributionOneChr} generates a figure showing the
+inferred $\alpha$ distribution. This figure is by default printed to the
+screen but can also be saved in a pdf file if a filename is provided via the
+\texttt{pdfFilename} argument. \texttt{num.cores} is the number of cores that
+are used for the calculation. By default, all functions of
+\textit{MethylSeekR} perform their calculations on a single core. However,
+almost all functions can be run in parallel (by setting \texttt{num.cores} to
+a number larger than one, only availabe on unix and mac) and we recommend
+the user to use multiple cores in order to speed up the calculations. To
+determine the number of cores of the machine used, use the following commands
+
+<<eval=FALSE>>=
+library(parallel)
+detectCores()
+@
+
+Generally, there is evidence for PMDs if the distribution of $\alpha$-values
+is bimodal or long-tailed with a significant fraction of $\alpha$ values
+larger or equal $1$. In the example here, the
+distribution is clearly bimodal and we thus, in a next step, run a Hidden
+Markov Model (HMM) to identify PMDs genome-wide (in cases where the $\alpha$
+distribution is unimodal (for examples see \cite{Burger2012}), there is no
+evidence for PMDs and the following three code chunks can be omitted).
+
+
+<<fig=TRUE, width=5, height=5>>=
+PMDsegments.gr <- segmentPMDs(m=meth.gr, chr.sel="chr22", 
+seqLengths=sLengths, num.cores=1)
+head(PMDsegments.gr)
+@
+
+Here, as above, \texttt{chr.sel} is the chromosome used to train the
+HMM. \texttt{segmentPMDs} generates a GRanges object which partitions the
+genome into PMDs and regions outside of PMDs (notPMD) as indicated in the
+first column of the metadata (\texttt{type}). The second column
+(\texttt{nCG}) of the metadata indicates the number of covered (by at least
+one read) CpGs in each region. The function creates a figure (which is by
+default printed to the screen or saved in a pdf file if a filename is
+provided via the \texttt{pdfFilename} argument) which shows the same alpha
+distribution as in the previous figure, but including the fitted Gaussian
+emission distributions of the HMM in red and green. If the HMM fitting works
+properly, the two Gaussians should correspond to the two peaks of the bimodal
+distribution (or the main peak and the tail if the alpha distribution is
+long-tailed), as illustrated for the example dataset. As a control, we may
+want to recalculate the distribution of $\alpha$-values using only the
+methylation values outside of the predicted PMDs.
+
+<<fig=TRUE, width=5, height=5>>=
+plotAlphaDistributionOneChr(m=subsetByOverlaps(meth.gr, 
+PMDsegments.gr[values(PMDsegments.gr)$type=="notPMD"]), chr.sel="chr22", 
+num.cores=1)
+@ 
+
+Clearly, we have managed to remove the second mode of the distribution. Such
+a unimodal distribution with most $\alpha$-values below 1 is also what is
+typically seen in methylomes without PMDs. Note that the distribution of
+$\alpha$-values is not only influenced by the presence of PMDs, but also by
+the variability in background methylation levels outside of regulatory
+regions. In methylomes that do not contain PMDs, but show large variability,
+a substantial fraction of $\alpha$-values (10-20\%) may be larger than
+one. However, if there are no PMDs, the shape of the $\alpha$-distribution
+should still be unimodal. It is thus rather the shape of the distribution
+(bimodal versus unimodal) that indicates the presence or absence of PMDs and
+not the fraction of $\alpha$-values larger 1. In any case, the resulting PMD
+segmentation should be visually inspected to assess its validity. This can
+easily be done for randomly chosen regions of the genome using the
+\texttt{plotPMDSegmentation} function.
+
+<<myfig1, fig=TRUE, width=15, height=10, include=FALSE, results=hide>>=
+plotPMDSegmentation(m=meth.gr, segs=PMDsegments.gr)
+@
+
+\centerline{\includegraphics[angle=90, scale=1.8]{MethylSeekR-myfig1}}
+
+
+The resulting figure is either printed to the screen (default) or saved in a
+pdf file if a filename is provided via the \texttt{pdfFilename} argument. It
+is also possible to plot multiple regions and save them in a multi-page pdf
+file if both the argument \texttt{pdfFilename} and \texttt{numRegions} are
+provided. The randomly chosen region that is displayed is broken up into 6
+panels and in each panel, the raw (ie unsmoothed) methylation levels of all
+CpGs with a minimal coverage of 5 reads are shown. PMDs are indicated as
+green bars, extending over the entire PMD.
+
+
+The PMD segmentation can be saved both as a GRanges object and as a
+tab-delimited file.
+
+<<eval=FALSE>>=
+savePMDSegments(PMDs=PMDsegments.gr, 
+GRangesFilename="PMDs.gr.rds", TableFilename="PMDs.tab")
+@
+
+\texttt{GRangesFilename} is the filename for the GRanges object and the
+\texttt{TableFilename} the filename for the tab-delimited file (only of the
+two filenames is required).
+
+
+
+\section{Identification of UMRs and LMRs}
+
+
+Once we have identified PMDs (if there are any), we can proceed to the
+segmentation of regulatory regions. These come in two distinct groups,
+unmethylated regions (UMRs) which correspond mostly to unmethylated CpG
+islands (including promoters) and low-methylated regions (LMRs) which
+correspond to distal regulatory regions \cite{Stadler:2011vn, Burger2012}. We
+identify these regions by a fairly straightforward procedure. We first smooth
+methylation levels over $3$ consecutive CpGs to reduce the sampling noise and
+then identify hypo-methylated regions as regions of consecutive CpGs with
+smoothed methylation levels below a fixed cut-off $m$, containing a minimal
+number of CpGs $n$. The identified regions are then further classified into
+UMRs and LMRs based on the number of CpGs they contain. The parameters $m$
+and $n$ must be determined prior to segmentation, which can be done via false
+discovery rate (FDR) considerations. This approach will naturally take into
+account the variability of methylation levels in the methylome
+studied. Briefly, for each set of parameters ($m$, $n$), we determine the
+number of regions with methylation levels below $m$ and with a minimal number
+of CpGs $n$ in both the original methylome, $n_o$, and a randomized
+methylome, $n_r$. The FDR is then defined as the ratio
+$\frac{n_r}{n_o}$. Given a user-defined cut-off on the FDR, we can then
+determine reasonable sets of values for $m$ and $n$.
+
+
+To calculate FDRs with \texttt{MethylSeekR}, we can use the function
+\texttt{calculateFDRs}. Since the FDR calculation is based on the
+randomization of methylation levels outside of CpG islands \cite{Burger2012},
+we first need to create a GRanges object containing the CpG islands, which is
+then passed on to \texttt{calculateFDRs}. CpG island annotation can for
+example be retrieved from UCSC using the package \texttt{rtracklayer}
+
+<<eval=TRUE>>=
+library(rtracklayer)
+session <- browserSession()
+genome(session) <- "hg18"
+query <- ucscTableQuery(session, "cpgIslandExt")
+CpGislands.gr <- track(query, asRangedData = FALSE)
+genome(CpGislands.gr) <- NA
+@ 
+
+If other genome assemblies than hg18 are used, hg18 in the code above needs
+to be replaced by the corresponding assembly.
+
+Next, we extend the CpG islands to 5kb to make sure that all unmethylated
+CpGs lying in CpG islands are excluded from the FDR calculation.
+
+%results=hide
+<<eval=TRUE>>=
+CpGislands.gr <- 
+suppressWarnings(resize(CpGislands.gr, 5000, fix="center"))
+@ 
+
+We can now calculate the FDRs
+
+<<fig=TRUE, width=8, height=4, eval=TRUE>>=
+stats <- calculateFDRs(m=meth.gr, CGIs=CpGislands.gr,
+PMDs=PMDsegments.gr, num.cores=1)
+stats
+@
+
+%\centerline{\includegraphics[scale=2]{MethylSeekR-myfig2}}
+
+Since the FDR calculation also masks PMDs, the PMDs need to be passed to the
+function as well. In the case of methylomes without PMDs, the \texttt{PMDs}
+argument can be omitted. The function creates a figure (which is, again, by
+default printed to the screen or saved in a pdf file if a filename is
+provided via the \texttt{pdfFilename} argument) which illustrates the
+relationship between FDR (cut at 20\% if larger than 20\%), $m$, $n$ and the
+number of identified segments. Additionally, the function returns a list
+containing a matrix with FDR values (in percent) and a matrix with the number
+of inferred segments in the original methylome for each $m$ (rows) and $n$
+(columns). Since the parameters $m$ and $n$ are partially redundant, we need
+to set one parameter by hand. $m=0.5$ ($50\%$ methylation) appears to be a
+reasonable choice for most methylomes (leading to high accuracy at a good
+sensitivity when overlapping the identified regions with DNase hypersensitive
+sites \cite{Stadler:2011vn, Burger2012}) and we thus set $m=0.5$ and
+determine $n$ by choosing the smallest $n$ such that the FDR is below a given
+cut-off (here $5\%$).
+
+
+<<eval=TRUE>>=
+FDR.cutoff <- 5 
+m.sel <- 0.5 
+n.sel=as.integer(names(stats$FDRs[as.character(m.sel), ]
+[stats$FDRs[as.character(m.sel), ]<FDR.cutoff])[1])
+n.sel
+@
+
+Once the parameters $m$ (\texttt{m.sel}) and $n$ (\texttt{n.sel}) have been
+set, we can call \texttt{segmentUMRsLMRs} to identify UMRs and LMRs.
+
+<<fig=TRUE, width=4, height=4, eval=TRUE>>=
+UMRLMRsegments.gr <- segmentUMRsLMRs(m=meth.gr, meth.cutoff=m.sel,
+nCpG.cutoff=n.sel, PMDs=PMDsegments.gr, 
+num.cores=1, myGenomeSeq=Hsapiens, 
+seqLengths=sLengths)
+head(UMRLMRsegments.gr)
+@ 
+
+
+If the methylome under consideration contains no PMDs, the \texttt{PMDs}
+argument can be omitted. The argument \texttt{myGenomeSeq} takes as input a
+BSgenome object of the genome assembly used, here Hsapiens, as defined in the
+package \texttt{BSgenome.Hsapiens.UCSC.hg18} (the genome object is directly
+loaded with the package and corresponds to the species name in the package
+name). The genome sequence is needed to retrieve the number of CpGs in the
+genome per identified region, which is further used to classifiy the regions
+into UMRs and LMRs. \texttt{segmentUMRsLMRs} returns a GRanges object
+containing the identified regions. The metadata includes the number of
+covered CpGs (by at least $5$ reads) per region ($nCG.segmentation$) , the
+number of CpGs in the genome per region ($nCG$), the total number of reads
+overlapping CpGs ($T$), the total number of tags overlapping CpGs without
+conversion event ($M$), the mean methylation ($pmeth=\frac{M}{T}$), the
+median methylation ($median.meth$, median over the methylation levels of each
+single CpG) and $type$, which classifies the region into UMR or LMR. For the
+calculation of $T$, $M$, $pmeth$ and $median.meth$, only CpG that are covered
+by at least $5$ reads are used. \texttt{segmentUMRsLMRs} also creates a
+figure (by default printed to the screen or saved in a pdf file if a filename
+is provided via the \texttt{pdfFilename} argument) which shows the number of
+CpGs per region versus its median methylation level. Typically, as in the
+example here, this figure should show a clear separation into unmethylated,
+CpG-rich regions (UMRs) versus low-methylated, CpG-poor regions (LMRs). The
+dashed line is at 30 CpGs and represents the cut-off used for the
+classification.
+
+
+
+Analogously to the PMD segmentation, the result of this final segmentation
+can be visualized for a randomly selected region.
+
+<<myfig3, fig=TRUE, width=12, height=6, include=FALSE, eval=TRUE, results=hide>>=
+plotFinalSegmentation(m=meth.gr, segs=UMRLMRsegments.gr,
+PMDs=PMDsegments.gr,meth.cutoff=m.sel)
+@ 
+
+If the methylome under study does not contain any PMDs, the \texttt{PMDs}
+argument can be omitted. The resulting figure is either printed to the screen
+(default) or saved in a pdf file if a filename is provided via the
+\texttt{pdfFilename} argument. It is also possible to plot multiple regions
+and save them in a multi-page pdf file if both the argument
+\texttt{pdfFilename} and \texttt{numRegions} are provided. The randomly
+chosen region that is displayed is broken up into 3 pairs of panels, where in
+each pair the same region is shown twice, once with raw methylation levels
+(top) and once with methylation levels smoothed over 3 consecutive CpGs
+(bottom). In both cases only CpGs with a coverage of at least $5$ reads are
+shown. The raw data best illustrates the disordered nature of methylation
+levels in PMDs, whereas the smoothed methylation levels more clearly show
+UMRs and LMRs. In all figures, UMRs are shown as blue squares (placed at the
+middle of the identified segment), LMRs as red triangles (placed at the
+middle of the identified segment) and PMDs as green bars (extending over the
+entire PMD). The cut-off on methylation to determine UMRs and LMRs is shown
+as a grey dashed line.
+
+
+\centerline{\includegraphics[angle=90, scale=1.8]{MethylSeekR-myfig3}}
+
+
+
+Finally, the segmentation of UMRs and LMRs can be saved both as a GRanges object and a
+tab-delimited file as follows,
+
+<<eval=FALSE>>=
+saveUMRLMRSegments(segs=UMRLMRsegments.gr, 
+GRangesFilename="UMRsLMRs.gr.rds", TableFilename="UMRsLMRs.tab")
+@
+
+Here, \texttt{GRangesFilename} is the filename for the GRanges object and
+the \texttt{TableFilename} the filename for the tab-delimited file (only of the
+two filenames is required).
+
+
+\bibliography{refs}
+\bibliographystyle{unsrt}
+%\bibliographystyle{plain}
+
+\end{document}
