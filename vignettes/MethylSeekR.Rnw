@@ -30,7 +30,7 @@
 \usepackage{rotating}
 \title{MethylSeekR}
 \author{Lukas Burger, Dimos Gaidatzis, Dirk Sch\"ubeler and Michael Stadler}
-\date{Modified: January 22, 2013. Compiled: \today}
+\date{Modified: July 25, 2013. Compiled: \today}
 
 \begin{document}
 
@@ -48,7 +48,7 @@
 
 \section{Introduction}
 
-This vignette describes how to use \textit{MethylSeekR}  to find regulatory
+This vignette describes how to use \textit{MethylSeekR} to find regulatory
 regions from whole-genome bisulfite-sequencing (Bis-seq) methylation
 data. The basic ideas of the method were introduced in \cite{Stadler:2011vn}
 and the validity of the approach demonstrated on Bis-seq data from mouse
@@ -56,7 +56,8 @@ embryonic stem cells and neural progenitors. MethylSeekR represents a refined
 and extended version of the inital approach that makes it more robust and
 generally applicable and allows much simpler and interactive setting of
 segmentation parameters. For details regarding the methodology, we refer the
-reader to \cite{Burger2012}.
+reader to \cite{Burger2012}. If you use MethylSeekR in a publication, please
+cite \cite{Burger2012}.
 
 \section{Prerequisites}
 
@@ -502,7 +503,7 @@ GRangesFilename="UMRsLMRs.gr.rds", TableFilename="UMRsLMRs.tab")
 @
 
 Here, \texttt{GRangesFilename} is the filename for the GRanges object and
-the \texttt{TableFilename} the filename for the tab-delimited file (only of the
+the \texttt{TableFilename} the filename for the tab-delimited file (only one of the
 two filenames is required).
 
 
