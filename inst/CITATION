@@ -1,0 +1,19 @@
+citEntry(entry="article",
+         title = "Identification of active regulatory regions from DNA methylation data",
+         author = personList( as.person("Lukas Burger"), 
+                              as.person("Dimos Gaidatzis"),
+			      as.person("Dirk Schubeler"),
+			      as.person("Michael B. Stadler")),
+         year = 2013,
+         journal = "Nucleic Acids Research",
+         doi = "10.1093/nar/gkt599",  
+
+         url = "http://nar.oxfordjournals.org/content/early/2013/07/04/nar.gkt599.long",
+         
+         textVersion = 
+         paste("Lukas Burger, Dimos Gaidatzis, Dirk Schubeler and Michael B. Stadler (2013):",
+	 "Identification of active regulatory regions from DNA methylation data.",
+	 "Nucleic Acids Research", "doi: 10.1093/nar/gkt599", "PMID: 23828043"))
+
+
+
