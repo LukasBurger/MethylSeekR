@@ -13,6 +13,9 @@ function(FileName, seqLengths, format="text"){
     stop("unknown format")
   }
 
+  mean.cov=mean(values(meth)[, 1])
+  if(mean.cov < 10)
+  warning(sprintf("We do not recommend the use of MethylSeekR\nfor methylomes with mean coverage < 10X\n(mean coverage of CpGs with at least one read: %.1f)", mean.cov))
   # order by chromosome and CpG position
   meth <- meth[order(as.vector(seqnames(meth)), start(meth))]
   meth

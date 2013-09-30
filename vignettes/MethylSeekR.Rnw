@@ -57,7 +57,10 @@ and extended version of the inital approach that makes it more robust and
 generally applicable and allows much simpler and interactive setting of
 segmentation parameters. For details regarding the methodology, we refer the
 reader to \cite{Burger2012}. If you use MethylSeekR in a publication, please
-cite \cite{Burger2012}.
+cite \cite{Burger2012}. It is important to note that MethylSeekR has been
+designed for the segmentation of Bis-seq datasets with a minimal genome-wide
+coverage of 10X and we do NOT recommend its use for datasets with lower
+coverage.
 
 \section{Prerequisites}
 
@@ -487,7 +490,9 @@ UMRs and LMRs. In all figures, UMRs are shown as blue squares (placed at the
 middle of the identified segment), LMRs as red triangles (placed at the
 middle of the identified segment) and PMDs as green bars (extending over the
 entire PMD). The cut-off on methylation to determine UMRs and LMRs is shown
-as a grey dashed line.
+as a grey dashed line. Note that UMRs and LMRs can partially overlap with
+PMDs as only UMRs and LMRs that are fully contained in PMDs are filtered
+out by the algorithm. 
 
 
 \centerline{\includegraphics[angle=90, scale=1.8]{MethylSeekR-myfig3}}
