@@ -8,7 +8,9 @@ function(m, meth.cutoff = 0.5, nCpG.cutoff = 3, PMDs = NA, pdfFilename = NULL, n
  # select CpGs with minimal coverage
   m=m[values(m)[, 1]>=minCover]
 
-  chrs=unique(as.character(seqnames(m)))
+  # only segments chromosomes with at least nCpG.smoothing covered CpGs
+  nCGsPerChr=table(as.character(seqnames(m)))
+  chrs=names(nCGsPerChr)[nCGsPerChr>=nCpG.smoothing]
     
   res <- mclapply(chrs, function(chr){
     

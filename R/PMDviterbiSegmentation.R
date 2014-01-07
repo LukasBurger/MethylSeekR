@@ -3,7 +3,9 @@ function(m, hmm.model, nCGbin, num.cores){
 
   message("performing viterbi segmentation")
 
-  chrs=unique(as.character(seqnames(m)))
+# only segment chromosomes with at least nCGbin covered CpGs
+  nCGsPerChr=table(as.character(seqnames(m)))
+  chrs=names(nCGsPerChr)[nCGsPerChr>=nCGbin]
   
   y.list=mclapply(chrs, function(chr.sel){
 

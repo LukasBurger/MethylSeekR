@@ -4,6 +4,9 @@ function(m, chr.sel, nCGbin, num.cores, plot.distr=TRUE, pdfFilename){
   message("training PMD-HMM on chromosome ", chr.sel)
 
   indx <- as.character(seqnames(m))==chr.sel
+  if(sum(indx)<nCGbin)
+    stop(sprintf("Error: less than %d covered CpGs on chromosome %s", nCGbin, chr.sel))
+  
   T <- as.numeric(values(m[indx])[, 1])
   M <- as.numeric(values(m[indx])[, 2])
   score <- calculateAlphaDistr(M, T, nCGbin, num.cores)
