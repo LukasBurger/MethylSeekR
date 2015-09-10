@@ -82,7 +82,7 @@ library(rtracklayer)
 session <- browserSession()
 genome(session) <- "hg18"
 query <- ucscTableQuery(session, "cpgIslandExt")
-CpGislands.gr <- track(query, asRangedData = FALSE)
+CpGislands.gr <- track(query)
 genome(CpGislands.gr) <- NA
 CpGislands.gr <- resize(CpGislands.gr, 5000, fix="center")
 
