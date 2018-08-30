@@ -71,8 +71,9 @@ and the related genome data packages. \textit{BSgenome} can be installed from
 Bioconductor (\url{http://www.bioconductor.org}) using the following commands
 
 <<install, eval=FALSE>>=
-source("http://www.bioconductor.org/biocLite.R")
-biocLite("BSgenome")
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("BSgenome")
 @
 
 After the installation, the available genomes can be displayed with 
@@ -87,8 +88,9 @@ assembly of the human genome \textit{BSgenome.Hsapiens.UCSC.hg18}. This
 genome, and analogously any of the other genomes, can be installed as follows
 
 <<install, eval=FALSE>>=
-source("http://www.bioconductor.org/biocLite.R")
-biocLite("BSgenome.Hsapiens.UCSC.hg18")
+if (!requireNamespace("BiocManager", quietly=TRUE))
+    install.packages("BiocManager")
+BiocManager::install("BSgenome.Hsapiens.UCSC.hg18")
 @
 
 
