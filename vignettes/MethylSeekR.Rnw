@@ -33,6 +33,7 @@
 \date{Modified: July 25, 2013. Compiled: \today}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \SweaveOpts{engine=R} 
 %\VignetteIndexEntry{MethylSeekR} 
@@ -376,7 +377,7 @@ example be retrieved from UCSC using the package \texttt{rtracklayer}
 library(rtracklayer)
 session <- browserSession()
 genome(session) <- "hg18"
-query <- ucscTableQuery(session, "cpgIslandExt")
+query <- ucscTableQuery(session, table = "cpgIslandExt")
 CpGislands.gr <- track(query)
 genome(CpGislands.gr) <- NA
 @ 
