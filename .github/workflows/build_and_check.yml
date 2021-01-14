@@ -82,6 +82,7 @@ jobs:
       if: runner.os == 'windows'
       run: |
         choco install miktex
+        refreshenv
         
     - name: Install R package dependencies
       run: |
