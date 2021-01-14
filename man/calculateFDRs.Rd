@@ -81,7 +81,7 @@ meth.gr <- readMethylome(FileName=methFname, seqLengths=sLengths)
 library(rtracklayer)
 session <- browserSession()
 genome(session) <- "hg18"
-query <- ucscTableQuery(session, "cpgIslandExt")
+query <- ucscTableQuery(session, table = "cpgIslandExt")
 CpGislands.gr <- track(query)
 genome(CpGislands.gr) <- NA
 CpGislands.gr <- resize(CpGislands.gr, 5000, fix="center")
