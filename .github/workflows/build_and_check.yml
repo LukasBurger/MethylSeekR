@@ -52,7 +52,7 @@ jobs:
       run: |
         tlmgr install a4wide
         tlmgr install ntgclass
-        tlmgr install times
+        tlmgr install psnfss
         tlmgr install hyperref
 
     - name: Install remotes
@@ -94,6 +94,7 @@ jobs:
     - name: Install macOS system dependencies
       if: runner.os == 'macOS'
       run: |
+        brew install curl-openssl
         brew install harfbuzz
         brew install fribidi
       
