@@ -107,12 +107,12 @@ jobs:
         name: ${{ runner.os }}-r${{ matrix.config.r }}-results
         path: check
 
-    - name: Test coverage
-      if: matrix.config.os == 'macOS-latest' && matrix.config.bioc == 'devel'
-      run: |
-        install.packages("covr")
-        covr::codecov(token = "${{secrets.CODECOV_TOKEN}}")
-      shell: Rscript {0}
+    # - name: Test coverage
+    #   if: matrix.config.os == 'macOS-latest' && matrix.config.bioc == 'devel'
+    #   run: |
+    #     install.packages("covr")
+    #     covr::codecov(token = "${{secrets.CODECOV_TOKEN}}")
+    #   shell: Rscript {0}
 
     - name: Deploy
       if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.config.os == 'macOS-latest' && matrix.config.bioc == 'devel'
