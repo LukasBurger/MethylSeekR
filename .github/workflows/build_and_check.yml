@@ -53,6 +53,7 @@ jobs:
         tlmgr install a4wide
         tlmgr install ntgclass
         tlmgr install times
+        tlmgr install hyperref
 
     - name: Query dependencies
       run: |
