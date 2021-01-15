@@ -71,6 +71,7 @@ jobs:
         tlmgr install ntgclass
         tlmgr install psnfss
         tlmgr install hyperref
+        tlmgr install ae
 
     - name: Install remotes
       run: |
