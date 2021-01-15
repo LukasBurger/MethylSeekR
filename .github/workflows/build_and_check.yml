@@ -14,12 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         config:
-        #- { os: windows-latest, r: 'release', bioc: 'devel'}
-        - { os: windows-latest, r: 'devel', bioc: 'devel'}
-        #- { os: macOS-latest, r: 'release', bioc: 'devel', curlConfigPath: '/usr/bin/'}
-        - { os: macOS-latest, r: 'devel', bioc: 'devel', curlConfigPath: '/usr/bin/'} # mvtnorm cannot be compiled on mac
-        #- { os: ubuntu-18.04, r: 'devel', bioc: 'devel', cran: "https://demo.rstudiopm.com/all/__linux__/bionic/latest" }
-        - { os: ubuntu-latest, r: 'devel', bioc: 'devel', image: 'bioconductor/bioconductor_docker:devel'}
+        #- { os: windows-latest, r: 'release', bioc: 'devel', deploy: false}
+        - { os: windows-latest, r: 'devel', bioc: 'devel', deploy: false}
+        #- { os: macOS-latest, r: 'release', bioc: 'devel', curlConfigPath: '/usr/bin/', deploy: false}
+        - { os: macOS-latest, r: 'devel', bioc: 'devel', curlConfigPath: '/usr/bin/', deploy: false}
+        #- { os: ubuntu-18.04, r: 'devel', bioc: 'devel', cran: "https://demo.rstudiopm.com/all/__linux__/bionic/latest", deploy: false}
+        - { os: ubuntu-latest, r: 'devel', bioc: 'devel', image: 'bioconductor/bioconductor_docker:devel', deploy: false}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -137,7 +137,7 @@ jobs:
     #   shell: Rscript {0}
 
     - name: Deploy
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.config.os == 'macOS-latest' && matrix.config.bioc == 'devel'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master' && matrix.config.deploy == true
       run: |
         R CMD INSTALL .
         Rscript -e "install.packages(c('remotes', 'BiocManager', 'ragg'), Ncpu = 2L)"
