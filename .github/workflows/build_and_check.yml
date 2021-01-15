@@ -50,7 +50,7 @@ jobs:
     - name: install Tex packages
       run: |
         tlmgr install a4wide
-        tlmgr install a4
+        tlmgr install a4paper
 
     - name: Query dependencies
       run: |
