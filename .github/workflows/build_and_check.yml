@@ -58,6 +58,7 @@ jobs:
         tlmgr init-usertree
 
     - name: install Tex packages
+      if: matrix.config.image == null
       run: |
         tlmgr install a4wide
         tlmgr install ntgclass
