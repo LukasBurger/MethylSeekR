@@ -51,6 +51,7 @@ jobs:
       run: |
         tlmgr install a4wide
         tlmgr install ntgclass
+        tlmgr install times
 
     - name: Query dependencies
       run: |
