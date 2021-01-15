@@ -50,7 +50,7 @@ jobs:
       uses: r-lib/actions/setup-tinytex@master
 
     - name: setup Tex (BioC container)
-      if: matrix.config.image != null
+      if: contains(matrix.config.image, 'bioconductor') == true
       run: |
         apt-get update && apt-get install -y --no-install-recommends apt-utils
 	      apt-get install -y --no-install-recommends texlive texlive-latex-extra texlive-fonts-extra texlive-bibtex-extra texlive-science texi2html texinfo
