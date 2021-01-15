@@ -35,6 +35,7 @@ jobs:
       
     - name: setup R
       uses: r-lib/actions/setup-r@master
+      if: matrix.config.image == null
       with:
         r-version: ${{ matrix.config.r }}
 
@@ -42,9 +43,11 @@ jobs:
       run: Rscript -e 'R.version'
 
     - name: setup Pandoc
+      if: matrix.config.image == null
       uses: r-lib/actions/setup-pandoc@master
 
     - name: setup Tex
+      if: matrix.config.image == null
       uses: r-lib/actions/setup-tinytex@master
       # if: contains(matrix.config.args, 'no-manual') == false
       
@@ -55,15 +58,26 @@ jobs:
         tlmgr install times
         tlmgr install hyperref
 
+    - name: Install remotes
+      run: |
+        install.packages('remotes')
+      shell: Rscript {0}
+
+    - name: Set BiocManager version
+      if: matrix.config.image == null
+      run: |
+        install.packages('BiocManager')
+        BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE)
+      shell: Rscript {0}
+
     - name: Query dependencies
       run: |
-        install.packages(c('remotes', 'BiocManager'), Ncpu = 2L)
         BiocManager::install(version = "${{ matrix.config.bioc }}", ask = FALSE)
         saveRDS(remotes::dev_package_deps(dependencies = TRUE, repos = c(getOption('repos'), BiocManager::repositories())), 'depends.Rds', version = 2)
       shell: Rscript {0}
 
     - name: Cache R packages
-      if: runner.os != 'Windows'
+      if: runner.os != 'Windows' && matrix.config.image == null
       uses: actions/cache@v1
       with:
         path: ${{ env.R_LIBS_USER }}
