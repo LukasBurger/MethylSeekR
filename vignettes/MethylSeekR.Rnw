@@ -115,7 +115,7 @@ set.seed(123)
 
 In a first step, the Bis-seq data needs to be loaded into
 R. The data should be in a tab-delimited file with four columns,
-\textit{chromosome}, \textit{position}, \textit{T} and \textit{M}, where
+\textit{chromosome}, \textit{position}, \textit{T} and \textit{M} (in this exact order), where
 \textit{position} is the coordinate of the cytosine in the CpG on the plus
 strand (we assume that the counts have been pooled from the two strands),
 \textit{T} is the total number of reads overlapping the cytosine and
