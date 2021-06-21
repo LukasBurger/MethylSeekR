@@ -108,7 +108,7 @@ jobs:
         brew install curl-openssl
         brew install harfbuzz
         brew install fribidi
-        brew install --cask gfortran
+        # brew install --cask gfortran
       
     - name: Install R package dependencies
       run: |
