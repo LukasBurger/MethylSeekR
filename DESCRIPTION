@@ -1,7 +1,7 @@
 Package: MethylSeekR
 Type: Package
 Title: Segmentation of Bis-seq data
-Version: 1.43.0
+Version: 1.44.0
 Date: 2014-7-1
 Author: Lukas Burger, Dimos Gaidatzis, Dirk Schubeler and Michael
         Stadler
