@@ -37,7 +37,7 @@
 
 \SweaveOpts{engine=R} 
 %\VignetteIndexEntry{MethylSeekR} 
-%\VignetteDepends{MethylSeekR, BSgenome.Hsapiens.UCSC.hg18, rtracklayer} 
+%\VignetteDepends{MethylSeekR, BSgenome.Hsapiens.UCSC.hg38, rtracklayer} 
 %\VignetteKeywords{MethylSeekR, segmentPMDs, segmentUMRsLMRs} 
 %\VignettePackage{MethylSeekR} 
 \maketitle
@@ -84,14 +84,14 @@ library(BSgenome)
 available.genomes()
 @
 
-For the example data that comes along with the package, we need the hg18
-assembly of the human genome \textit{BSgenome.Hsapiens.UCSC.hg18}. This
+For the example data that comes along with the package, we need the hg38
+assembly of the human genome \textit{BSgenome.Hsapiens.UCSC.hg38}. This
 genome, and analogously any of the other genomes, can be installed as follows
 
 <<install, eval=FALSE>>=
 if (!requireNamespace("BiocManager", quietly=TRUE))
     install.packages("BiocManager")
-BiocManager::install("BSgenome.Hsapiens.UCSC.hg18")
+BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
 @
 
 
@@ -123,10 +123,10 @@ strand (we assume that the counts have been pooled from the two strands),
 (reflecting methylated cytosines). An example file, containing the
 methylation information for $200,000$ CpGs from chromosome 22 of human IMR90
 cells \cite{Lister:2009fk}, is part of the package and its path can be
-retrieved with the following command
+retrieved with the following command (for compatibility reasons with the current Bioconductor release, we have lifted this file to hg38)
 
 <<eval=FALSE>>=
-system.file("extdata", "Lister2009_imr90_hg18_chr22.tab",
+system.file("extdata", "Lister2009_imr90_hg38_chr22.tab",
 package="MethylSeekR")
 @
 
@@ -135,10 +135,10 @@ This function takes two arguments, the name of the file containing the
 methylation data and a named vector containing the chromosome lengths of the
 reference genome. This vector can be easily created using the
 \textit{BSgenome} package of the reference genome. For the example data used
-here, we work with the human hg18 assembly.
+here, we work with the human hg38 assembly.
 
 <<eval=TRUE>>=
-library("BSgenome.Hsapiens.UCSC.hg18")
+library("BSgenome.Hsapiens.UCSC.hg38")
 sLengths=seqlengths(Hsapiens)
 head(sLengths)
 @ 
@@ -158,7 +158,7 @@ commands.
 
 <<eval=TRUE>>=
 methFname <- system.file("extdata", 
-"Lister2009_imr90_hg18_chr22.tab", package="MethylSeekR")
+"Lister2009_imr90_hg38_chr22.tab", package="MethylSeekR")
 meth.gr <- readMethylome(FileName=methFname, seqLengths=sLengths)
 head(meth.gr)
 @ 
@@ -183,11 +183,11 @@ Similary to the methylation data, the SNP table can be loaded using the
 \texttt{readSNPTable} function. The SNP data should be in a tab-delimited
 text file with two columns corresponding to the chromosome and position of
 the SNPs. The path to an example SNP file with data downloaded from dbSNP
-\cite{Sherry:2001fk} for hg18 (and prefiltered to keep the file size small)
+\cite{Sherry:2001fk} for hg38 (and prefiltered to keep the file size small and lifted to hg38 for compatibility reasons with the current Bioconductor release)
 can be retrieved as follows
 
 <<eval=FALSE>>=
-system.file("extdata", "SNVs_hg18_chr22.tab",
+system.file("extdata", "SNVs_hg38_chr22.tab",
 package="MethylSeekR")
 @ 
 
@@ -196,7 +196,7 @@ commands
 
 
 <<eval=TRUE>>=
-snpFname <- system.file("extdata", "SNVs_hg18_chr22.tab",
+snpFname <- system.file("extdata", "SNVs_hg38_chr22.tab",
 package="MethylSeekR")
 snps.gr <- readSNPTable(FileName=snpFname, seqLengths=sLengths)
 head(snps.gr)
@@ -376,13 +376,13 @@ example be retrieved from UCSC using the package \texttt{rtracklayer}
 <<eval=TRUE>>=
 library(rtracklayer)
 session <- browserSession()
-genome(session) <- "hg18"
+genome(session) <- "hg38"
 query <- ucscTableQuery(session, table = "cpgIslandExt")
 CpGislands.gr <- track(query)
 genome(CpGislands.gr) <- NA
 @ 
 
-If other genome assemblies than hg18 are used, hg18 in the code above needs
+If other genome assemblies than hg38 are used, hg38 in the code above needs
 to be replaced by the corresponding assembly.
 
 Next, we extend the CpG islands to 5kb to make sure that all unmethylated
@@ -445,7 +445,7 @@ head(UMRLMRsegments.gr)
 If the methylome under consideration contains no PMDs, the \texttt{PMDs}
 argument can be omitted. The argument \texttt{myGenomeSeq} takes as input a
 BSgenome object of the genome assembly used, here Hsapiens, as defined in the
-package \texttt{BSgenome.Hsapiens.UCSC.hg18} (the genome object is directly
+package \texttt{BSgenome.Hsapiens.UCSC.hg38} (the genome object is directly
 loaded with the package and corresponds to the species name in the package
 name). The genome sequence is needed to retrieve the number of CpGs in the
 genome per identified region, which is further used to classifiy the regions
