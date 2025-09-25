@@ -69,18 +69,18 @@ Lukas Burger lukas.burger@fmi.ch
 library(MethylSeekR)
 
 # get chromosome lengths
-library("BSgenome.Hsapiens.UCSC.hg18")
+library("BSgenome.Hsapiens.UCSC.hg38")
 sLengths=seqlengths(Hsapiens)
 
 # read methylation data
-methFname <- system.file("extdata", "Lister2009_imr90_hg18_chr22.tab",
+methFname <- system.file("extdata", "Lister2009_imr90_hg38_chr22.tab",
 package="MethylSeekR")
 meth.gr <- readMethylome(FileName=methFname, seqLengths=sLengths)
 
 #load CpG islands
 library(rtracklayer)
 session <- browserSession()
-genome(session) <- "hg18"
+genome(session) <- "hg38"
 query <- ucscTableQuery(session, table = "cpgIslandExt")
 CpGislands.gr <- track(query)
 genome(CpGislands.gr) <- NA

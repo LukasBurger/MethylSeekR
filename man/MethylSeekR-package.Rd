@@ -34,16 +34,16 @@ methylome at distal regulatory regions, Nature 2011.
 library(MethylSeekR)
 
 # get chromosome lengths
-library("BSgenome.Hsapiens.UCSC.hg18")
+library("BSgenome.Hsapiens.UCSC.hg38")
 sLengths=seqlengths(Hsapiens)
 
 # read methylation data
-methFname <- system.file("extdata", "Lister2009_imr90_hg18_chr22.tab",
+methFname <- system.file("extdata", "Lister2009_imr90_hg38_chr22.tab",
 package="MethylSeekR")
 meth.gr <- readMethylome(FileName=methFname, seqLengths=sLengths)
 
 #read SNP data
-snpFname <- system.file("extdata", "SNVs_hg18_chr22.tab",
+snpFname <- system.file("extdata", "SNVs_hg38_chr22.tab",
 package="MethylSeekR")
 snps.gr <- readSNPTable(FileName=snpFname, seqLengths=sLengths)
 
@@ -67,7 +67,7 @@ savePMDSegments(PMDs=PMDsegments.gr, GRangesFilename="PMDs.gr.rds",
 #load CpG islands
 library(rtracklayer)
 session <- browserSession()
-genome(session) <- "hg18"
+genome(session) <- "hg38"
 query <- ucscTableQuery(session, table = "cpgIslandExt")
 CpGislands.gr <- track(query)
 genome(CpGislands.gr) <- NA

@@ -52,11 +52,11 @@ segmentPMDs(m, chr.sel, pdfFilename = NULL, seqLengths, num.cores = 1, nCGbin = 
 library(MethylSeekR)
 
 # get chromosome lengths
-library("BSgenome.Hsapiens.UCSC.hg18")
+library("BSgenome.Hsapiens.UCSC.hg38")
 sLengths=seqlengths(Hsapiens)
 
 # read methylation data
-methFname <- system.file("extdata", "Lister2009_imr90_hg18_chr22.tab",
+methFname <- system.file("extdata", "Lister2009_imr90_hg38_chr22.tab",
 package="MethylSeekR")
 meth.gr <- readMethylome(FileName=methFname, seqLengths=sLengths)
 

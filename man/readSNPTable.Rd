@@ -39,11 +39,11 @@ readSNPTable(FileName, seqLengths, format = "text")
 library(MethylSeekR)
 
 # get chromosome lengths
-library("BSgenome.Hsapiens.UCSC.hg18")
+library("BSgenome.Hsapiens.UCSC.hg38")
 sLengths=seqlengths(Hsapiens)
 
 #read SNP data
-snpFname <- system.file("extdata", "SNVs_hg18_chr22.tab",
+snpFname <- system.file("extdata", "SNVs_hg38_chr22.tab",
 package="MethylSeekR")
 snps.gr <- readSNPTable(FileName=snpFname, seqLengths=sLengths)
 
